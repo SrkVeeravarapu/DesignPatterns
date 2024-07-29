@@ -1,8 +1,19 @@
 using System;
 using System.Collections.Generic;
 
-namespace WithoutMementoPattern
+namespace MementoPattern
 {
+    // Memento class
+    class TextEditorMemento
+    {
+        public string Text { get; private set; }
+
+        public TextEditorMemento(string text)
+        {
+            Text = text;
+        }
+    }
+
     // Originator class
     class TextEditor
     {
@@ -13,16 +24,27 @@ namespace WithoutMementoPattern
             Text = text;
             Console.WriteLine($"Current Text: {Text}");
         }
+
+        public TextEditorMemento Save()
+        {
+            return new TextEditorMemento(Text);
+        }
+
+        public void Restore(TextEditorMemento memento)
+        {
+            Text = memento.Text;
+            Console.WriteLine($"Restored Text: {Text}");
+        }
     }
 
     // Caretaker class
     class TextEditorHistory
     {
-        private Stack<string> _history = new Stack<string>();
+        private Stack<TextEditorMemento> _history = new Stack<TextEditorMemento>();
 
         public void SaveState(TextEditor editor)
         {
-            _history.Push(editor.Text);
+            _history.Push(editor.Save());
             Console.WriteLine("State saved.");
         }
 
@@ -30,8 +52,8 @@ namespace WithoutMementoPattern
         {
             if (_history.Count > 0)
             {
-                string previousText = _history.Pop();
-                editor.SetText(previousText);
+                TextEditorMemento memento = _history.Pop();
+                editor.Restore(memento);
                 Console.WriteLine("State restored.");
             }
             else
