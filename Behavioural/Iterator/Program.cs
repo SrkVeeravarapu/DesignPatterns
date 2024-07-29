@@ -1,7 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
-namespace WithoutIteratorPattern
+namespace IteratorPattern
 {
     // Book class
     class Book
@@ -14,8 +15,49 @@ namespace WithoutIteratorPattern
         }
     }
 
+    // Iterator interface
+    interface IIterator<T>
+    {
+        T Current { get; }
+        bool MoveNext();
+        void Reset();
+    }
+
+    // Concrete iterator
+    class BookIterator : IIterator<Book>
+    {
+        private readonly BookCollection _collection;
+        private int _currentIndex = -1;
+
+        public BookIterator(BookCollection collection)
+        {
+            _collection = collection;
+        }
+
+        public Book Current => _collection[_currentIndex];
+
+        public bool MoveNext()
+        {
+            _currentIndex++;
+            return _currentIndex < _collection.Count;
+        }
+
+        public void Reset()
+        {
+            _currentIndex = -1;
+        }
+    }
+
+    // Collection interface
+    interface IBookCollection
+    {
+        IIterator<Book> CreateIterator();
+        int Count { get; }
+        Book this[int index] { get; }
+    }
+
     // Concrete collection
-    class BookCollection
+    class BookCollection : IBookCollection
     {
         private readonly List<Book> _books = new List<Book>();
 
@@ -28,9 +70,9 @@ namespace WithoutIteratorPattern
             _books.Add(book);
         }
 
-        public List<Book> GetBooks()
+        public IIterator<Book> CreateIterator()
         {
-            return _books;
+            return new BookIterator(this);
         }
     }
 
@@ -43,12 +85,12 @@ namespace WithoutIteratorPattern
             collection.AddBook(new Book("Clean Code"));
             collection.AddBook(new Book("Refactoring"));
 
-            List<Book> books = collection.GetBooks();
+            IIterator<Book> iterator = collection.CreateIterator();
 
             Console.WriteLine("Iterating over collection:");
-            for (int i = 0; i < books.Count; i++)
+            while (iterator.MoveNext())
             {
-                Console.WriteLine(books[i].Title);
+                Console.WriteLine(iterator.Current.Title);
             }
         }
     }
